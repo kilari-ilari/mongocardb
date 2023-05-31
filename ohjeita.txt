@@ -1,0 +1,443 @@
+OHJEET
+
+----------------
+    Luo node.js express projekti
+
+1.) Luo uusi kansio nimeltä (PROJEKTIN NIMI) ja siirry hakemistoon.
+
+mkdir db
+
+cd db
+2.) Alusta Node.js -sovellus
+
+npm init
+3.) Asenna express- ja body-parser. Voit asentaa useita riippuvuuksia yhdellä npm install -komennolla.
+
+npm install express body-parser
+4.) Lisää start- ja dev (nodemon) -skriptit package.json- tiedostoon. Sitten package.json -tiedostosi pitäisi nyt näyttää samalta kuin koodi alla.
+
+{
+  "name": "mongomoviedb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1"
+  }
+}
+5.) Seuraavaksi asennamme mongoose- kirjaston kirjoittamalla seuraavan komennon. Mongoose on Node.js:n ja MongoDB tietokannan oliomallinnus kirjasto (ODM = Object Document Mapping). Sen avulla voimme käsitellä MongoDB titetokantaa JavaScript olioilla.
+
+npm install mongoose
+Package.json-tiedoston pitäisi nyt näyttää seuraavalta.
+
+{
+  "name": "mongomoviedb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "mongoose": "^5.11.9"
+  }
+}
+Luo lopuksi index.js nodemoviedb:n juurihakemistoon ja kopioi seuraava koodi tiedostoon.
+
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const app = express();
+app.use(bodyParser.json());
+
+const port = 3000;
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}.`);
+});
+Nyt voit käynnistää verkkopalvelimen komennolla npm run dev .
+
+---------------    
+    Muodosta yhteys MongoDB-tietokantaan
+
+Muodosta yhteys MongoDB-tietokantaan
+Ensiksi meidän on tuotava mongoose-kirjasto index.js-tiedostoon lisäämällä require kuten seuraavassa koodissa.
+
+const express = require('express');
+const bodyParser = require('body-parser');
+new 
+const app = express();
+app.use(bodyParser.json());
+
+//MongoDB connection
+const mongoose = require('mongoose');
+
+const port = 3000;
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}.`);
+});
+Mongoose:ssa on connect-funktio, jota voidaan käyttää yhteyden muodostamiseen MongoDB- tietokantaan. connect-funktion ensimmäinen parametri on tietokannan yhteysmerkkijono (connection string). Toisessa parametrissa voit määrittää erilaisia ​​yhteyden muodostus vaihtoehtoja. Me käytämme useNewUrlParser -vaihtoehtoa, joka mahdollistaa uuden URL jäsennys logiikan. Löydät kaikki vaihtoehdot mongoose -ohjeesta. Huom! Yhteysmerkkijonon saimme edellisessä osiossa kohdassa "Luo MongoDB-tietokanta". Käytä omaa yhteysmerkkijonoasi ja korvaa myFirstDatabase teksti tietokannan nimellä moviedb.
+
+ 
+
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const app = express();
+app.use(bodyParser.json());
+
+//MongoDB connection
+const mongoose = require('mongoose');
+const mongoURL = 'YOUR_CONNECTION_STRING';
+mongoose.connect(mongoURL, { useNewUrlParser: true , useUnifiedTopology: true});
+
+const port = 3000;
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}.`);
+});
+db olio alustetaan, kun yhteys on avattu. Voimme viitata siihen nimellä mongoose.connection. Yhteydellä on erilaisia ​​tiloja, kuten yhdistetty (connected) ja virhe (error). Meidän kannattaa tarkistaa, onko tietokantayhteydessä virheitä. Voimme käyttää on- funktiota virhetapahtumien kuuntelemiseen ja kirjata konsoliin mahdolliset yhteysvirheet niiden tapahtuessa, kuten alla olevassa koodissa.
+
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const app = express();
+app.use(bodyParser.json());
+
+//MongoDB connection
+const mongoose = require('mongoose');
+const mongoURL = 'YOUR_CONNECTION_STRING';
+mongoose.connect(mongoURL, { useNewUrlParser: true , useUnifiedTopology: true});
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error'));
+
+const port = 3000;
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}.`);
+});
+Nyt olemme alustaneet tietokantayhteyden ja seuraavaksi määritämme käytettävän tietokantamallin.
+
+------------
+Luo MongoDB-skeema ja malli
+Luodaan omat moduulit tietokantamalleihimme. Luo uusi kansio nimeltä models ja lisää uusi tiedosto movie.js tähän kansioon. Projektirakenteen pitäisi nyt näyttää seuraavalta.
+
+Mongoose:n skeema (schema) määrittää MongoDB-dokumenttisi rakenteen. Alla oleva koodi luo skeeman (schema) dokumentille movie. Asiakirja sisältää kolme kenttää: otsikko (title), ohjaaja (director) ja vuosi (year). Kopioi seuraava koodi movie.js-tiedostoon.
+
+var mongoose = require('mongoose');
+
+var Schema = mongoose.Schema;
+
+var MovieSchema = new Schema(
+  {
+     title: type: String, 
+     director: type: String,
+     year: type: Number
+  }
+);
+Mongoose kirjasto tukee seuraavia tietotyyppejä, ja voit lukea niistä lisää sivulta mongoose documentation.
+
+Number
+Date
+Buffer
+Boolean
+Mixed
+ObjectId
+Array
+Decimal128
+Map
+Voit myös lisätä validoinnin skeeman määrittelyyn. Seuraavassa koodissa olemme määrittäneet kaikki kentät pakollisiksi. Olemme myös määrittäneet otsikon ja ohjaajan kenttien enimmäispituuden.
+
+var mongoose = require('mongoose');
+
+var Schema = mongoose.Schema;
+
+var MovieSchema = new Schema(
+  {
+    title: {type: String, required: true, maxlength: 150},
+    director: {type: String, required: true, maxlength: 200},
+    year: {type: Number, required: true}
+  }
+);
+Seuraavaksi meidän on muunnettava skeemamme mongoose-malliksi käyttämällä mongoose.model() funktiota. Mallia käytetään MongoDB-tietokannan CRUD-toimintojen kutsumiseen. Exportoimme myös mallin, jotta voimme käyttää sitä muissa tiedostoissa.
+
+var mongoose = require('mongoose');
+
+var Schema = mongoose.Schema;
+
+var MovieSchema = new Schema(
+  {
+    title: {type: String, required: true, maxlength: 150},
+    director: {type: String, required: true, maxlength: 200},
+    year: {type: Number, required: true}
+  }
+);
+
+//Export model
+module.exports = mongoose.model('Movie', MovieSchema);
+
+Nyt olemme luoneet skeeman ja mallin ja voimme jatkaa sovelluksen kehittämistä.
+
+-------------
+
+Hae tietoja MongoDB-kannasta
+Olemme luoneet yhteyden tietokantaan. Seuraavaksi lisätään REST-sovellusliittymä. Ensimmäinen tehtävä on luoda GET-pyyntö, jota käytetään  elokuvien hakemiseen tietokannasta. Luo uusi tiedosto nimeltä routes.js, ja projektirakenteesi tulisi näyttää seuraavalta.
+
+.
+
+Avaa routes.js-tiedosto VS Code-editorissa. Route.js-tiedostossa käytämme express.Router- luokkaa reittien määrittelemiseen. Ensin meidän on alustettava reititin käyttämällä seuraavaa lausetta const router = express.Router(). Reititinoliolla (router) on get- funktio, jota voimme käyttää GET-pyyntöjen käsittelemiseen. Ensimmäinen parametri on päätepiste ja toinen parametri on funktio, jota kutsutaan, kun pyyntö saapuu asiakkaalta. Meidän on lisättävä async -avainsana toimintoon, koska tietokantaoperaatiot ovat asynkronisia. Route.js-tiedoston lähdekoodi näkyy alla.
+
+const express = require('express');
+const router = express.Router();
+
+// Fetch all movies
+router.get("/movies", async (req, res) => {
+})
+
+module.exports = router;
+Seuraavaksi tarvitsemme mallin, jotta saamme pääsyn movies-kokoelmaan. Ensin meidän on tuotava movie -malli routes.js-tiedostoon. Mongoose-mallissa on find()-funktio, jota voidaan käyttää dokumenttien noutamiseen kokoelmasta. Meidän on myös lisättävä await -avainsana ennen asynkronisen menetelmän kutsua. Käytämme try-catch-menetelmää poikkeuksien käsittelyyn. Jos poikkeus havaitaan, palautamme tilan 500 sekä virheviestin. Muutoin lähetämme kaikki löytyvät elokuvat vastauksena.
+
+const express = require('express');
+const router = express.Router();
+const Movie = require('./models/movie');
+
+// Fetch all movies
+router.get("/movies", async (req, res) => {
+  try {
+    const movies = await Movie.find();
+    res.send(movies)
+  } catch(err) {
+    return res.status(500).json({ message: err.message });
+  }
+})
+
+module.exports = router;
+Lopuksi meidän on vielä ladattava ja käytettävä reititintä index.js-tiedostossamme.
+
+const express = require('express');
+const bodyParser = require('body-parser');
+const routes = require("./routes")
+
+const app = express();
+app.use(bodyParser.json());
+app.use('/', routes);
+
+//MongoDB connection
+const mongoose = require('mongoose');
+const mongoURL = 'YOUR_CONNECTION_STRING';
+mongoose.connect(mongoURL, { useNewUrlParser: true , useUnifiedTopology: true});
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
+const port = 3000;
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}.`);
+});
+Nyt olemme valmiita testaamaan GET-toiminnallisuutta. Jos projekti ei ole käynnissä, käynnistä node.js-projekti kirjoittamalla komento npm run dev komentorivillä. Avaa selain ja siirry osoitteeseen http://localhost:3000/movies, ja sinun pitäisi nähdä kaikki MongoDB-tietokannan elokuvat selaimessa, kuten alla.
+
+(KUVA)
+
+Funktiossa find() voi olla argumenttina ehto. Esimerkiksi seuraava koodi Movie.find({title: 'The Irishman'}) löytää elokuvan, jolla on annettu otsikko (title).
+
+Mongoose-mallissa on myös findById() -funktio, jota voidaan käyttää asiakirjan löytämiseen kentän _id avulla. Seuraavassa osassa toteutetaan POST, jota voidaan käyttää uusien elokuvien lisäämiseen MongoDB-tietokantaan.
+
+-------------
+
+Lisää tietoja MongoDB-kantaan
+Tässä vaiheessa toteutamme toiminnot uuden elokuvan lisäämiseksi MongoDB-kantaan POST-pyynnön avulla. Uusi elokuva haetaan saapuvan POST-pyynnön runko-osasta. Avaa route.js-tiedosto ja lisää uusi reitti POST-pyyntöön. Express.Route :lla on post -menetelmä POST-pyyntöjen käsittelyyn. Lisää seuraava koodi route.js-tiedostoon. Se käsittelee POST-pyynnöt /movies -päätepisteessä. Sinun täytyy käyttää async/await -avainsanoja johtuen asynkronisista tietokanta toiminnoista.
+
+// Add movie
+router.post("/movies", async (req, res) => {
+})
+Seuraavaksi meidän on haettava uusi elokuva pyynnön runko-osasta käyttämällä req.body- oliota, kuten alla olevassa koodissa näkyy. Luomme uuden Movie mongoose-mallin pyynnöstä. Movie -malli ladattiin jo edellisessä osassa Routes.js-tiedostoon.
+
+// Add movie
+router.post("/movies", async (req, res) => {
+  const movie = new Movie({
+    title: req.body.title,
+    director: req.body.director,
+    year: req.body.year
+  });
+})
+Mongoose-mallissa on save() -funktio, jota voidaan käyttää tietojen lisäämiseen MongoDB-kantaan. Jos tallennus onnistuu, lähetämme vastauksena tilan 201 ja uuden elokuvan. Virheen sattuessa lähetämme vastauksessa tilan 500 ja virhesanoman.
+
+// Add movie
+router.post("/movies", async (req, res) => {
+  const movie = new Movie({
+    title: req.body.title,
+    director: req.body.director,
+    year: req.body.year
+  });
+
+  try {
+    const newMovie = await movie.save();
+    res.status(201).json({ newMovie });
+  } catch(err) {
+    return res.status(500).json({ message: err.message });
+  }
+})
+Nyt olemme valmiita testaamaan POST-toiminnallisuutta. Lähetä Postman-ohjelmalla POST-pyyntö osoitteeseen http://localhost:3000/movies. Lisää seuraava JSON-merkkijono rungon sisälle.
+
+{
+  "title": "Bohemian Rhapsody",
+  "director": "Bryan Singer",
+  "year": "2018"
+}
+
+
+Kun olet painanut 'Lähetä' (send)-painiketta, sinun pitäisi saada tila 201 ja uusi elokuva vastauksena. Tarkistetaan myös, että uusi elokuva on lisätty lähettämällä GET-pyyntö osoitteeseen http://localhost:3000/movies . Vastauksesi tulisi näyttää alla olevalta.
+
+
+
+Huom! Voit nähdä, että uudella asiakirjalla on uusi kenttä nimeltä __v. Se on asiakirjan versionumero, koska mongoose sisältää dokumentin versionhallinnan. Versionhallinta voidaan poistaa käytöstä, jos et halua versionhallintaa.
+
+Voit siirtyä myös MongoDB Atlas -sivustollesi ja nähdä uuden asiakirjan 'Kokoelmat' (Collections)-sivulta kuten alla olevassa kuvassa. Saatat joutua painamaan ‘Etsi’ (Find)-painiketta nähdäksesi uuden asiakirjan.
+
+
+
+Skeemassa määriteltiin, että kaikki kentät ovat pakollisia. Voit testata, mitä tapahtuu, jos jokin kentistä on tyhjä POST-pyynnössä. Poista yksi kentän arvoista elokuvasta (rungon sisällä) ja lähetä pyyntö uudelleen. Nyt catch kutsutaan ja vastauksessa lähetetään selkeä virheilmoitus
+
+------------
+
+Poista tietoja MongoDB-kannasta
+Seuraavaksi toteutamme poistotoiminnon, jossa DELETE-pyyntö lähetetään /movies-tietokantaan. Luo uusi reitti router.js-tiedoston poistotoiminnoille, kuten alla.
+
+// Delete movie
+router.delete("/movies", async (req, res) => {
+})
+Mongoose-mallissa on useita toimintoja asiakirjojen poistamiseksi. deleteOne() -funktiolla voi poistaa yhden tietyn asiakirjan MongoDB-kannasta. deleteOne -funktio saa kaksi parametria, joista ensimmäinen on ehto, jota käytetään poistetun asiakirjan löytämiseen. Toinen paramtetri on ns. takaisinkutsu-funktio, eli funktio jota kutsutaan operaation jälkeen. Takaisinkutsu-funktio saa kaksi paramteria, virheen (err) ja tuloksen (result). Meidän tapauksessa käytämme elokuvan nimeä (title) ehdossa ja nimi lähetetään pyynnön runko-osassa (req.body.title). deleteOne()-funtktio poistaa ensimmäisen asiakirjan, jonka ehto toteutuu.
+
+// Delete movie by title
+router.delete("/movies", async (req, res) => {
+  await Movie.deleteOne({title: req.body.title}, (err, result) => {
+  });
+})
+Seuraavaksi voimme tarkistaa, onko takaisinkutsu-toiminnon virhe (err) olemassa, ja jos se on tyhjä, lähetämme tilana 200 ja tuloksena vastauksen (result). Muuten lähetämme tilana 500 ja viestinä virheilmoituksen (err.message).
+
+// Delete movie by title
+router.delete("/movies", async (req, res) => {
+  await Movie.deleteOne({title: req.body.title}, (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: err.message });
+    }
+    else {
+      res.status(200).json(result);
+    }
+  });
+})
+Nyt voit testata poistotoimintoa lähettämällä DELETE-pyynnön /movies -tietokantaan. Sinun tulisi sisällyttää otsikko pyynnön runko-osaan (Body) kuten alla olevassa kuvassa.
+
+
+
+Sinun pitäisi nähdä poistettujen asiakirjojen määrä vastauksessa, ja jos teet GET-pyynnön /movies-tietokantaan, asiakirjan pitäisi olla poistunut MongoDB-kannasta.
+
+deleteMany()-funktiota voidaan käyttää samalla tavalla kuin deleteOne() funktiota, mutta se poistaa kaikki asiakirjat, jotka täyttävät ehdon.
+
+Voit myös käyttää findByIdAndDelete() -funktiota asiakirjan poistamiseen __id-kentän avulla.
+
+-----------
+
+Päivitä tietoja MongoDB-kannassa
+Tietojen päivittämiseen on useita mongoose-toimintoja. Seuraavassa esimerkissä käytämme findOneAndUpdate()-funktiota, jota voidaan käyttää asiakirjan päivittämiseen ehdon avulla. Päivitys tapahtuu PUT-pyynnön avulla, joten lisäämme seuraavan toiminnon Routes.js-tiedostoon. Käytämme kenttää _id löytääksemme päivitettävän elokuvan. Tunnus (id) lähetetään pyynnön parametrina.  
+
+// Update movie by id
+router.put("/movies/:id", async (req, res) => {
+
+})
+Ensimmäinen argumentti findOneAndUpdate() -funktiossa on ehto, jolla haemme elokuvan _id-kentän perusteella ({_id: req.params.id}). Toinen argumentti on olio, jonka arvot päivitetään. Päivitettävät arvot saamme pyynnön runko-osasta(req.body). Kolmas valinnainen argumentti on {new: true} jolla päivitetyn elokuvan muutetut tiedot palautetaan vastauksena. Virheen sattuessa lähetämme vastauksen tilana 500 ja virheilmoituksen. Muussa tapauksessa lähetämme tilana 200 ja päivitetyn elokuvan vastauksena. Päivitys näyttää seuraavalta.
+
+// Update movie by id
+router.put("/movies/:id", async (req, res) => {
+  await Movie.findOneAndUpdate({ _id: req.params.id }, req.body, {new: true}, (err, result) => { 
+    if (err){ 
+      return res.status(500).json({ message: err.message });
+    } 
+    else{ 
+      res.status(200).json({ result });
+    } 
+  }); 
+})
+Olemme nyt valmiita testaamaan päivitystoimintoa. Ensin sinun on haettava jokin elokuvan tunnus MongoDB-kannasta. Lähetä GET-pyyntö ja kopioi elokuvan tunnus (id) vastauksesta. Avaa Postman ja luo PUT-pyyntö http://localhost:3000/movies/{movie_id}. Korvaa {movie_id} kopioidulla tunnuksella. Lisää päivitetty elokuva olio pyynnön runko-osaan kuten alla olevassa kuvassa näkyy (Käytä JSONia). Ainoastaan muutettavat objektin ominaisuudet lähetetään.
+
+
+
+Jos nyt teet GET-pyynnön uudelleen, sinun pitäisi nähdä päivitetty elokuva kuten alla.
+
+
+
+Voit nyt nähdä myös vanhentumis-varoituksen konsolissa. Se voidaan poistaa välittämällä seuraavan parametrin mongoose.connect -lausekkeeseen (index.js-tiedosto).
+
+mongoose.connect(mongoURL, { useFindAndModify: false, useNewUrlParser: true , useUnifiedTopology: true});
+Nyt MongoDB REST -sovellusliittymä on valmis, ja alla on koko route.js-tiedoston lähdekoodi.
+
+const express = require('express');
+const router = express.Router();
+const Movie = require('./models/movie');
+
+// Fetch all movies
+router.get("/movies", async (req, res) => {
+  try {
+    const movies = await Movie.find();
+    res.send(movies)
+  } catch(err) {
+    return res.status(500).json({ message: err.message });
+  }
+})
+
+// Add movie
+router.post("/movies", async (req, res) => {
+  const movie = new Movie({
+    title: req.body.title,
+    director: req.body.director,
+    year: req.body.year
+  });
+
+  try {
+    const newMovie = await movie.save();
+    res.status(201).json({ newMovie });
+  } catch(err) {
+    return res.status(500).json({ message: err.message });
+  }
+})
+
+// Delete movie by title
+router.delete("/movies", async (req, res) => {
+  await Movie.deleteOne({title: req.body.title}, (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: err.message });
+    }
+    else {
+      res.status(200).json(result);
+    }
+  });
+})
+
+// Update movie by id
+router.put("/movies/:id", async (req, res) => {
+  await Movie.findOneAndUpdate({ _id: req.params.id }, req.body, {new: true}, (err, result) => { 
+    if (err){ 
+      return res.status(500).json({ message: err.message });
+    } 
+    else{ 
+      res.status(200).json({ result });
+    } 
+  }); 
+})
+
+module.exports = router;
